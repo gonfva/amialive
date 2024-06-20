@@ -6,45 +6,69 @@ import (
 	"math/rand"
 
 	"github.com/caseymrm/menuet"
-	"github.com/go-ping/ping"
+	"github.com/gen2brain/beeep"
+	probing "github.com/prometheus-community/pro-bing"
+)
+
+const (
+	numRuns = 10
 )
 
 type Pinger struct {
 	Address string
-	Pinger  *ping.Pinger
+	Pinger  *probing.Pinger
 }
 
-func getPingers() (pingers []Pinger) {
+func helloPinger() {
 	addresses := []string{"8.8.8.8", "1.1.1.1", "9.9.9.9"}
-	for _, address := range addresses {
-		pinger, err := ping.NewPinger(address)
+	var sum time.Duration
+	var denom int64
+	var title string
+	lastFewRuns := make([]time.Duration, numRuns)
+	currentPointer := 0
+	for {
+		address := addresses[rand.Intn(len(addresses))]
+		pinger, err := probing.NewPinger(address)
 		if err != nil {
 			panic(err)
 		}
-		pingers = append(pingers, Pinger{Address: address, Pinger: pinger})
-	}
-	return
-}
-
-func getPinger(pingers []Pinger) *ping.Pinger {
-	return pingers[rand.Intn(len(pingers))].Pinger
-}
-
-func helloClock() {
-	pingers := getPingers()
-	for {
-		pinger := getPinger(pingers)
 		pinger.Count = 1
 		pinger.Run()
 		stats := pinger.Statistics()
+		pinger.Stop()
+		currentRtt := stats.AvgRtt
+
+		if denom < numRuns {
+			denom += 1
+		} else {
+			sum = sum - lastFewRuns[currentPointer]
+		}
+		lastFewRuns[currentPointer] = currentRtt
+		sum += currentRtt
+
+		currentPointer += 1
+		if currentPointer >= numRuns {
+			currentPointer = 0
+		}
+		avg := time.Duration(int64(sum) / denom)
+		if currentRtt > 2*avg || currentRtt == 0 || stats.PacketLoss > 0 {
+			title = "**************************************"
+			err := beeep.Beep(beeep.DefaultFreq, beeep.DefaultDuration)
+			if err != nil {
+				panic(err)
+			}
+		} else {
+			title = avg.String()
+		}
+		//log.Println(lastFewRuns, currentRtt, sum, avg)
 		menuet.App().SetMenuState(&menuet.MenuState{
-			Title: stats.AvgRtt.String(),
+			Title: title,
 		})
 		time.Sleep(1 * time.Second)
 	}
 }
 
 func main() {
-	go helloClock()
+	go helloPinger()
 	menuet.App().RunApplication()
 }
