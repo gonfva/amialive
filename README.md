@@ -13,3 +13,5 @@ It only works on Mac. And I have only tested on a Mac x86.
 To build, download the code and do
 
 `go build .`
+
+Thanks to https://github.com/caseymrm/menuet
