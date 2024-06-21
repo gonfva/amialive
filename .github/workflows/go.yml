@@ -26,3 +26,12 @@ jobs:
 
     - name: Test
       run: go test -v ./...
+
+    - name: Release
+      if: github.ref_type == 'tag'
+      uses: "marvinpinto/action-automatic-releases@latest"
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        prerelease: false
+        files: |
+          amialive
