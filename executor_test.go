@@ -38,7 +38,7 @@ func TestString(t *testing.T) {
 		avg:            2000000000,
 	}
 
-	expected := "LastNRuns: [1s 2s 3s**] Average: 2s MostRecent: 1s"
+	expected := "LastNRuns: [1s 2s** 3s] Average: 2s MostRecent: 1s"
 	actual := stats.String()
 
 	assert.Equal(t, expected, actual)
@@ -77,7 +77,10 @@ func TestCalculateStats_Overflow(t *testing.T) {
 	}
 
 	assert.Equal(t, numRuns, int(stats.NumIterations))
-	assert.Equal(t, (int64(numRuns)*(int64(numRuns)+1)*int64(50*time.Millisecond))/int64(numRuns), stats.avg)
+	sum_end := time.Duration((numRuns+5)*(numRuns+6)*100/2) * time.Millisecond
+	sum_init := time.Duration((5)*(6)*100/2) * time.Millisecond
+	sum := sum_end - sum_init
+	assert.Equal(t, int64(sum)/int64(numRuns), stats.avg)
 }
 
 func TestCalculateStats_PacketLoss(t *testing.T) {
