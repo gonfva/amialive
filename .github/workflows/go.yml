@@ -14,10 +14,10 @@ on:
 jobs:
 
   build:
-    runs-on: macos-13
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        arch: ["amd64", "arm64"]
+        os: ["macos-13", "macos-13-xlarge"]
     steps:
     - uses: actions/checkout@v4
 
@@ -27,10 +27,10 @@ jobs:
         go-version: '1.22.3'
 
     - name: Build Intel
-      run: GOOS=darwin GOARCH=${{ matrix.arch }} go build -o amialive-${{matrix.arch}} -v ./...
+      run: GOOS=darwin GOARCH=${{ matrix.os == 'macos-13' && 'amd64' || 'arm64' }} go build -o amialive-${{ matrix.os == 'macos-13' && 'amd64' || 'arm64' }} -v ./...
 
     - name: Test
-      run: GOOS=darwin GOARCH=${{ matrix.arch }} go test -v ./...
+      run: GOOS=darwin GOARCH=${{ matrix.os == 'macos-13' && 'amd64' || 'arm64' }} go test -v ./...
 
     - name: Release
       if: github.ref_type == 'tag'
