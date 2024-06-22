@@ -45,6 +45,8 @@ func (stats *Stats) run() {
 func (stats *Stats) calculateStats(pstats *probing.Statistics) {
 	stats.MostRecent = int64(pstats.MaxRtt)
 
+	stats.PacketLoss = pstats.PacketsSent - pstats.PacketsRecv
+
 	if stats.NumIterations < numRuns {
 		stats.NumIterations += 1
 	} else {
