@@ -38,6 +38,11 @@ func (stats *Stats) run() {
 	pstats := pinger.Statistics()
 	stats.mu.Lock()
 	defer stats.mu.Unlock()
+	stats.calculateStats(pstats)
+	stats.getTitle()
+}
+
+func (stats *Stats) calculateStats(pstats *probing.Statistics) {
 	stats.MostRecent = int64(pstats.MaxRtt)
 
 	if stats.NumIterations < numRuns {
@@ -53,7 +58,20 @@ func (stats *Stats) run() {
 		stats.CurrentPointer = 0
 	}
 	stats.avg = stats.CurrentSum / stats.NumIterations
-	stats.getTitle()
+}
+
+func (stats *Stats) String() string {
+	durationSlice := make([]string, len(stats.LastNRuns))
+	for i, v := range stats.LastNRuns {
+
+		if i == stats.CurrentPointer-1 {
+			durationSlice[i] = fmt.Sprintf("%s**", time.Duration(v).String())
+		} else {
+			durationSlice[i] = time.Duration(v).String()
+		}
+	}
+	str := fmt.Sprintf("LastNRuns: %v Average: %s MostRecent: %v", durationSlice, time.Duration(stats.avg).String(), time.Duration(stats.MostRecent).String())
+	return str
 }
 
 func (stats *Stats) getTitle() {
@@ -77,9 +95,10 @@ func (stats *Stats) getTitle() {
 		if err != nil {
 			panic(err)
 		}
-		log.Println("OOOPS", stats)
+		log.Println("ERROR", stats.String())
+	} else {
+		log.Println(stats)
 	}
-	log.Println(stats)
 	menuet.App().SetMenuState(&menuet.MenuState{
 		Title: title,
 	})
