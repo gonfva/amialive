@@ -53,41 +53,46 @@ func (stats *Stats) run() {
 		stats.CurrentPointer = 0
 	}
 	stats.avg = stats.CurrentSum / stats.NumIterations
+	stats.getTitle()
 }
 
-func (stats *Stats) getTitle() (title string) {
-	if stats.MostRecent > 2*stats.avg || stats.MostRecent == 0 || stats.PacketLoss > 0 {
-		if stats.MostRecent > safetyMargin*stats.avg {
-			title = fmt.Sprintf("High RTT -> Current %v Average %v", time.Duration(stats.MostRecent).String(), time.Duration(stats.avg).String())
-		} else {
-			title = "PACKET LOSS"
-		}
+func (stats *Stats) getTitle() {
+	alert := false
+	title := time.Duration(stats.MostRecent).String()
+	if stats.MostRecent == 0 || stats.PacketLoss > 0 {
+		alert = true
+		title = "PACKET LOSS"
+	}
+	if menuet.Defaults().Integer("AlertOn") == TripleAverage && stats.MostRecent > 3*stats.avg {
+		alert = true
+		title = fmt.Sprintf("Triple average -> Current %v Average %v", time.Duration(stats.MostRecent).String(), time.Duration(stats.avg).String())
+	}
+	if menuet.Defaults().Integer("AlertOn") == LessThan250ms && time.Duration(stats.MostRecent) > 250*time.Millisecond {
+		alert = true
+		title = fmt.Sprintf("More than 250ms -> Current %v", time.Duration(stats.MostRecent).String())
+	}
+	if alert {
+
 		err := beeep.Beep(beeep.DefaultFreq, beeep.DefaultDuration)
-		log.Println("OOOPS", stats)
 		if err != nil {
 			panic(err)
 		}
-	} else {
-		title = time.Duration(stats.MostRecent).String()
+		log.Println("OOOPS", stats)
 	}
 	log.Println(stats)
-	return title
+	menuet.App().SetMenuState(&menuet.MenuState{
+		Title: title,
+	})
 }
 
 func taskExecutor() {
-
-	var title string
 
 	stats := Stats{LastNRuns: make([]int64, numRuns), CurrentSum: 0, NumIterations: 0}
 
 	for {
 
 		go stats.run()
-		title = stats.getTitle()
 
-		menuet.App().SetMenuState(&menuet.MenuState{
-			Title: title,
-		})
 		time.Sleep(1 * time.Second)
 	}
 }
