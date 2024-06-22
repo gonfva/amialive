@@ -27,10 +27,10 @@ jobs:
         go-version: '1.22.3'
 
     - name: Build Intel
-      run: GOOS=darwin GOARCH=${{ matrix.arch }} go build -v ./... -o amialive-${{matrix.arch}}
+      run: GOOS=darwin GOARCH=${{ matrix.arch }} go build -o amialive-${{matrix.arch}} -v ./...
 
     - name: Test
-      run: go test -v ./...
+      run: GOOS=darwin GOARCH=${{ matrix.arch }} go test -v ./...
 
     - name: Release
       if: github.ref_type == 'tag'
