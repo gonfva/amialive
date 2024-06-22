@@ -13,7 +13,7 @@ You can then choose to be alerted on one of two conditions.
 
 It only works on Mac. And I have only tested on a Mac x86. It works for me!!!
 
-You can download the most recent release, unzip and move to Applications, but MacOS might complain about some file coming from the Internet.
+You can download the most recent release, unzip, move to Applications, right click, and open. But MacOS might complain about some file coming from the Internet.
 
 You can also build the code yourself. Just download the repo and do
 
