@@ -83,13 +83,13 @@ func (stats *Stats) getTitle() {
 		alert = true
 		title = "PACKET LOSS"
 	}
-	if menuet.Defaults().Integer("AlertOn") == TripleAverage && stats.MostRecent > 3*stats.avg {
+	if menuet.Defaults().Integer("AlertOn") == MultipleAverage && stats.MostRecent > int64(menuet.Defaults().Integer("MaximumRTT"))*stats.avg {
 		alert = true
 		title = fmt.Sprintf("Triple average -> Current %v Average %v", time.Duration(stats.MostRecent).String(), time.Duration(stats.avg).String())
 	}
-	if menuet.Defaults().Integer("AlertOn") == LessThan250ms && time.Duration(stats.MostRecent) > 250*time.Millisecond {
+	if menuet.Defaults().Integer("AlertOn") == LessThanMaxRTT && time.Duration(stats.MostRecent) > time.Duration(int64(menuet.Defaults().Integer("MaximumRTT")))*time.Millisecond {
 		alert = true
-		title = fmt.Sprintf("More than 250ms -> Current %v", time.Duration(stats.MostRecent).String())
+		title = fmt.Sprintf("More than %vms -> Current %v", menuet.Defaults().Integer("MaximumRTT"), time.Duration(stats.MostRecent).String())
 	}
 	if alert {
 

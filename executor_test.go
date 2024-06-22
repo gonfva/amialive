@@ -55,7 +55,7 @@ func TestGetTitle(t *testing.T) {
 	stats.avg = int64(50 * time.Millisecond)
 
 	// Mock menuet.Defaults().Integer
-	menuet.Defaults().SetInteger("AlertOn", TripleAverage)
+	menuet.Defaults().SetInteger("AlertOn", MultipleAverage)
 
 	stats.getTitle()
 
