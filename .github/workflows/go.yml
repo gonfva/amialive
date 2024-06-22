@@ -15,6 +15,9 @@ jobs:
 
   build:
     runs-on: macos-13
+    strategy:
+      matrix:
+        arch: ["amd64", "arm64"]
     steps:
     - uses: actions/checkout@v4
 
@@ -23,8 +26,8 @@ jobs:
       with:
         go-version: '1.22.3'
 
-    - name: Build
-      run: go build -v ./...
+    - name: Build Intel
+      run: GOOS=darwin GOARCH=${{ matrix.arch }} go build -v ./... -o amialive-${{matrix.arch}}
 
     - name: Test
       run: go test -v ./...
@@ -36,4 +39,4 @@ jobs:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
         prerelease: false
         files: |
-          amialive
+          amialive-${{matrix.arch}}
