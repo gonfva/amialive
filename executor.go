@@ -14,7 +14,6 @@ import (
 const (
 	numRuns      = 10
 	safetyMargin = 2
-	address      = "8.8.8.8"
 )
 
 type Stats struct {
@@ -29,6 +28,7 @@ type Stats struct {
 }
 
 func (stats *Stats) run() {
+	address := menuet.Defaults().String("DNSServer")
 	pinger, err := probing.NewPinger(address)
 	if err != nil {
 		panic(err)
