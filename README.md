@@ -6,7 +6,7 @@ A very simple status bar app for MacOS to check if we have a good Internet conne
 
 It pings to a DNS server (that can be configured) and outputs the current round trip time.
 
-You can then choose to be alerted on of two conditions.
+You can then choose to be alerted on one of two conditions.
 
 + The most recent ping exceeds a certain threshold (by default 250ms).
 + The most recent ping exceeds a certain multiple of the moving average of the last 10 pings.
