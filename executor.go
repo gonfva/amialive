@@ -39,7 +39,10 @@ func (stats *Stats) run() {
 	stats.mu.Lock()
 	defer stats.mu.Unlock()
 	stats.calculateStats(pstats)
-	stats.getTitle()
+	title := stats.getTitle(true)
+	menuet.App().SetMenuState(&menuet.MenuState{
+		Title: title,
+	})
 }
 
 func (stats *Stats) calculateStats(pstats *probing.Statistics) {
@@ -76,34 +79,33 @@ func (stats *Stats) String() string {
 	return str
 }
 
-func (stats *Stats) getTitle() {
+func (stats *Stats) getTitle(withSound bool) string {
 	alert := false
 	title := time.Duration(stats.MostRecent).String()
 	if stats.MostRecent == 0 || stats.PacketLoss > 0 {
 		alert = true
 		title = "PACKET LOSS"
 	}
-	if menuet.Defaults().Integer("AlertOn") == MultipleAverage && stats.MostRecent > int64(menuet.Defaults().Integer("MaximumRTT"))*stats.avg {
+	if menuet.Defaults().Integer("AlertOn") == MultipleAverage && stats.MostRecent > int64(menuet.Defaults().Integer("Multiple"))*stats.avg {
 		alert = true
-		title = fmt.Sprintf("Triple average -> Current %v Average %v", time.Duration(stats.MostRecent).String(), time.Duration(stats.avg).String())
+		title = fmt.Sprintf("Multiple of average -> Current %v Average %v", time.Duration(stats.MostRecent).String(), time.Duration(stats.avg).String())
 	}
 	if menuet.Defaults().Integer("AlertOn") == LessThanMaxRTT && time.Duration(stats.MostRecent) > time.Duration(int64(menuet.Defaults().Integer("MaximumRTT")))*time.Millisecond {
 		alert = true
 		title = fmt.Sprintf("More than %vms -> Current %v", menuet.Defaults().Integer("MaximumRTT"), time.Duration(stats.MostRecent).String())
 	}
 	if alert {
-
-		err := beeep.Beep(beeep.DefaultFreq, beeep.DefaultDuration)
-		if err != nil {
-			panic(err)
+		if withSound {
+			err := beeep.Beep(beeep.DefaultFreq, beeep.DefaultDuration)
+			if err != nil {
+				panic(err)
+			}
 		}
 		log.Println("ERROR", stats.String())
 	} else {
 		log.Println(stats)
 	}
-	menuet.App().SetMenuState(&menuet.MenuState{
-		Title: title,
-	})
+	return title
 }
 
 func taskExecutor() {

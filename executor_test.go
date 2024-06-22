@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -45,23 +46,41 @@ func TestString(t *testing.T) {
 }
 
 func TestGetTitle(t *testing.T) {
-	stats := &Stats{
-		LastNRuns: make([]int64, numRuns),
+	var tests = []struct {
+		alerton           int
+		maximumrttDefault int
+		multipleDefault   int
+		mostrecent        int
+		avg               int
+		want              string
+	}{
+		{LessThanMaxRTT, 100, -1, 101, 10, "More than 100ms -> Current 101ms"},
+		{LessThanMaxRTT, 100, -1, 99, 10, "99ms"},
+		{MultipleAverage, -1, 3, 31, 10, "Multiple of average -> Current 31ms Average 10ms"},
+		{MultipleAverage, -1, 3, 29, 10, "29ms"},
+	}
+	for _, tt := range tests {
+		testname := fmt.Sprintf("%v", tt)
+		t.Run(testname, func(t *testing.T) {
+			stats := &Stats{
+				LastNRuns: make([]int64, numRuns),
+			}
+
+			// Setting mock values
+			stats.MostRecent = int64(time.Duration(tt.mostrecent) * time.Millisecond)
+			stats.PacketLoss = 0
+			stats.avg = int64(time.Duration(tt.avg) * time.Millisecond)
+
+			// Mock menuet.Defaults().Integer
+			menuet.Defaults().SetInteger("AlertOn", tt.alerton)
+			menuet.Defaults().SetInteger("MaximumRTT", tt.maximumrttDefault)
+			menuet.Defaults().SetInteger("Multiple", tt.multipleDefault)
+
+			title := stats.getTitle(false)
+			assert.Equal(t, title, tt.want)
+		})
 	}
 
-	// Setting mock values
-	stats.MostRecent = int64(100 * time.Millisecond)
-	stats.PacketLoss = 0
-	stats.avg = int64(50 * time.Millisecond)
-
-	// Mock menuet.Defaults().Integer
-	menuet.Defaults().SetInteger("AlertOn", MultipleAverage)
-
-	stats.getTitle()
-
-	// Here, we would ideally check the output of the getTitle method.
-	// This would require mocking the menuet.App().SetMenuState method.
-	// For simplicity, we assume that it sets the title correctly.
 }
 
 func TestCalculateStats_Overflow(t *testing.T) {
